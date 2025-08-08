@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>API Dragon Ball</title>
+
+    <style type="text/css">
+        /* Fondo de la página */
+        body {
+            background-image: url('https://i.imgur.com/iseuBxE.png'); /* Cambia la URL por la imagen que quieras usar */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Estilo para el título h3 */
+        h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 36px;
+            color: #f52b07;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        /* Estilo para el caption de la tabla */
+        caption {
+            font-family: 'Lobster', cursive;
+            font-size: 32px;
+            color: #f52b07;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tabla centrada y estilo */
+        .estilo_Tabla_1 {
+            font-family: "Trebuchet MS", Arial, sans-serif;
+            width: 70%;
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+
+        /* Estilo para las celdas y cabecera */
+        .estilo_Tabla_1 td, .estilo_Tabla_1 th {
+            border: 1px solid #000000;
+            padding: 5px;
+        }
+
+        /* Estilo para la cabecera */
+        .estilo_Tabla_1 th {
+            background-color: #F56907;
+            color: white;
+        }
+
+        /* Estilo para las celdas */
+        .estilo_Tabla_1 tr td {
+            background-color: #F9C344;
+            color: #000;
+        }
+
+        /* Estilo para los botones */
+        button {
+            margin: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #ADD8E6;
+        }
+
+        /* Centrar la sección de datos del personaje */
+        #datosPersonaje {
+            width: 70%;
+            background-color: rgba(239, 214, 156, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        /* Estilo de la imagen en la descripción */
+        #datosPersonaje img {
+            display: block;
+            margin: 0 auto 15px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Estilo para centrar los botones */
+        .botones {
+            text-align: center;
+            margin: 10px 0;
+        }
+    </style>
+
+    <!-- Importar util2Ajax.js -->
+    <script type="text/javascript" src="util2Ajax.js"></script>
+
+    <!-- Script que utilizará la clase pAJAX para manejar la petición -->
+    <script type="text/javascript">
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Cuando la página haya cargado
+        window.onload = () => {
+            cargarPersonajes();
+        };
+
+        // Función para cargar personajes desde la API
+        const cargarPersonajes = () => {
+            let ajax = new pAJAX();
+            const url = `https://dragonball-api.com/api/characters?page=${currentPage}&limit=10`;
+            // Envío de la petición a la URL con el método GET y función callback para procesar la respuesta
+            ajax.peticion(url, 'GET', (data) => {
+                // Parseo de la respuesta JSON recibida y conversión a un objeto JavaScript
+                let respuesta = JSON.parse(data);
+
+                // Llamada a la función que muestra los personajes en la tabla
+                pintaPersonajes(respuesta.items);
+
+                // Actualización del número total de páginas con la información de la respuesta
+                totalPages = respuesta.meta.totalPages;
+
+                // Actualización de los botones de navegación (habilitando o deshabilitando según corresponda)
+                actualizarBotones();
+            });
+        };
+
+        // Función para pintar personajes en la tabla
+        const pintaPersonajes = (personajes) => {
+            let tabla = document.getElementById("cuerpoPersonajes");
+            tabla.innerHTML = '';
+
+            personajes.forEach(personaje => {
+                let tr = document.createElement("tr");
+
+                let tdNombre = document.createElement("td");
+                tdNombre.innerText = personaje.name;
+                tr.appendChild(tdNombre);
+
+                let tdKi = document.createElement("td");
+                tdKi.innerText = personaje.ki;
+                tr.appendChild(tdKi);
+
+                let tdMaxKi = document.createElement("td");
+                tdMaxKi.innerText = personaje.maxKi;
+                tr.appendChild(tdMaxKi);
+
+                let tdRaza = document.createElement("td");
+                tdRaza.innerText = personaje.race;
+                tr.appendChild(tdRaza);
+
+                let tdSexo = document.createElement("td");
+                tdSexo.innerText = personaje.gender;
+                tr.appendChild(tdSexo);
+
+                let tdInfo = document.createElement("td");
+                let enlace = document.createElement("a");
+                enlace.href = "#";
+                enlace.innerText = "Ver descripción";
+                enlace.onclick = function (event) {
+                    event.preventDefault();
+                    mostrarDescripcion(personaje.image, personaje.description, personaje.name);
+                };
+                tdInfo.appendChild(enlace);
+                tr.appendChild(tdInfo);
+
+                tabla.appendChild(tr);
+            });
+        };
+
+        // Función para mostrar la imagen y descripción del personaje
+        const mostrarDescripcion = (imagenUrl, descripcion, nombre) => {
+            let divPersonaje = document.getElementById("datosPersonaje");
+            divPersonaje.innerHTML = `
+                <h4>Descripción de ${nombre}</h4>
+                <img src="${imagenUrl}" alt="Imagen de ${nombre}" style="width:200px; height:auto;">
+                <p>${descripcion}</p>
+            `;
+        };
+
+        // Función para actualizar los botones de navegación si se alcanza el limite de paginas
+        const actualizarBotones = () => {
+            document.getElementById("btnAnterior").disabled = currentPage === 1;
+            document.getElementById("btnSiguiente").disabled = currentPage === totalPages;
+        };
+
+        // Función para avanzar a la siguiente página
+        const siguientePagina = () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                cargarPersonajes();
+            }
+        };
+
+        // Función para retroceder a la página anterior
+        const anteriorPagina = () => {
+            if (currentPage > 1) {
+                currentPage--;
+                cargarPersonajes();
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <h3>Llamada a la API de DRAGON BALL</h3>
+
+    <table id="personajes" class="estilo_Tabla_1">
+        <caption>Personajes de Dragon Ball</caption>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Ki</th>
+                <th>Máximo poder</th>
+                <th>Raza</th>
+                <th>Sexo</th>
+                <th>Información</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoPersonajes">
+            <!-- Los personajes se pintarán aquí -->
+        </tbody>
+    </table>
+
+    <div class="botones">
+        <button id="btnAnterior" onclick="anteriorPagina()">Anterior</button>
+        <button id="btnSiguiente" onclick="siguientePagina()">Siguiente</button>
+    </div>
+
+    <br/><br/>
+    <div id="datosPersonaje">
+        <h4>Datos del personaje</h4>
+        <!-- Aquí se mostrarán la imagen y descripción del personaje seleccionado -->
+    </div>
+</body>
+</html>
